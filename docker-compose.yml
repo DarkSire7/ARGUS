@@ -1,0 +1,59 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: argus
+      POSTGRES_PASSWORD: argus
+      POSTGRES_DB: argus
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U argus -d argus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://argus:argus@postgres:5432/argus
+      REDIS_URL: redis://redis:6379
+      VIDEO_SOURCE: /app/videos/demo.mp4
+      CAMERA_ID: cam-001
+      CAMERA_NAME: Demo Feed
+      CAMERA_VENUE: Main Hall
+      WARN_THRESHOLD: "10"
+      CRITICAL_THRESHOLD: "20"
+      CONFIDENCE_THRESHOLD: "0.5"
+      BROADCAST_INTERVAL: "2.0"
+    volumes:
+      # Mount your downloaded demo video here
+      - ./backend/videos:/app/videos:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pg_data:

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+
+# ML model weights (auto-downloaded by Ultralytics on first run)
+*.pt
+*.onnx
+
+# Demo video (too large for git)
+backend/videos/*.mp4
+backend/videos/*.mkv
+backend/videos/*.avi
+backend/videos/*.webm
+!backend/videos/.gitkeep
+
+# Unpacked docx
+report_unpacked/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

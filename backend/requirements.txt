@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+asyncpg
+redis[hiredis]
+ultralytics
+opencv-python-headless
+python-dotenv
+yt-dlp

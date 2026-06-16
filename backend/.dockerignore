@@ -1,0 +1,9 @@
+.env
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pt
+videos/
+report_unpacked/
+.git

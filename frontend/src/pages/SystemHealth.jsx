@@ -13,13 +13,16 @@ import { RestAPI } from "../services/api";
 
 export default function SystemHealth() {
   const [health, setHealth] = useState(null);
+  const [latency, setLatency] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
 
   const fetchHealth = async () => {
     setLoading(true);
     try {
+      const t0 = performance.now();
       const data = await RestAPI.getHealth();
+      setLatency(Math.round(performance.now() - t0));
       setHealth(data);
       setLastRefresh(new Date());
     } catch (err) {
@@ -93,8 +96,8 @@ export default function SystemHealth() {
         <HealthCard
           icon={Gauge}
           label="Backend Latency"
-          value={`${health.backendLatency}ms`}
-          color={health.backendLatency < 20 ? "green" : health.backendLatency < 50 ? "amber" : "red"}
+          value={latency !== null ? `${latency}ms` : "—"}
+          color={latency === null ? "accent" : latency < 20 ? "green" : latency < 50 ? "amber" : "red"}
         />
         <HealthCard
           icon={Users}

@@ -16,6 +16,7 @@ const PAGE_SIZE = 15;
 
 export default function IncidentLog() {
   const [incidents, setIncidents] = useState([]);
+  const [cameras, setCameras] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     cameraId: "",
@@ -24,6 +25,10 @@ export default function IncidentLog() {
     endDate: "",
   });
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    RestAPI.getCameras().then(setCameras).catch(() => {});
+  }, []);
 
   // Fetch incidents
   const fetchIncidents = useCallback(async () => {
@@ -127,10 +132,9 @@ export default function IncidentLog() {
               className="w-full px-3 py-2 rounded-xl bg-argus-800 border border-argus-700/50 text-argus-200 text-sm focus:outline-none focus:border-argus-accent/50 transition-colors"
             >
               <option value="">All Cameras</option>
-              <option value="cam-001">Main Entrance Gate A</option>
-              <option value="cam-002">Food Court Central</option>
-              <option value="cam-003">Emergency Exit B7</option>
-              <option value="cam-004">Parking Lot West</option>
+              {cameras.map((cam) => (
+                <option key={cam.id} value={cam.id}>{cam.name}</option>
+              ))}
             </select>
           </div>
 
@@ -225,7 +229,7 @@ export default function IncidentLog() {
                 <tr>
                   <td colSpan={7} className="px-5 py-12 text-center">
                     <p className="text-sm text-argus-500">
-                      No incidents match the current filters.
+                      No incidents recorded yet. Alerts will appear here when zone thresholds are breached.
                     </p>
                   </td>
                 </tr>
