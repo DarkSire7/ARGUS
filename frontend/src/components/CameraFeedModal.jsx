@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Camera, X, WifiOff, Users, Activity } from "lucide-react";
 import { BACKEND_URL } from "../services/api";
 
-const POLL_MS = 200; // ~5 fps — smooth enough for surveillance, gentle on the server
+const POLL_MS = 50; // ~20 fps — backend reader runs at 30fps, stay under that
 
 export default function CameraFeedModal({ snapshot, onClose }) {
   const [frameSrc, setFrameSrc] = useState(null);
