@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Settings as SettingsIcon,
+  SlidersHorizontal,
   Save,
   Plus,
   Camera,
@@ -9,6 +10,7 @@ import {
   Check,
   RotateCcw,
 } from "lucide-react";
+import { useOutletContext } from "react-router-dom";
 import { wsService, RestAPI } from "../services/api";
 
 const CELL_LABELS = [
@@ -18,6 +20,8 @@ const CELL_LABELS = [
 ];
 
 export default function Settings() {
+  const { role } = useOutletContext() || {};
+  const isAdmin = role === "admin";
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState(null);
   const [thresholds, setThresholds] = useState([]);
@@ -102,12 +106,15 @@ export default function Settings() {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-argus-accent/10 flex items-center justify-center">
-          <SettingsIcon className="w-5 h-5 text-argus-accent" />
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAdmin ? "bg-purple-500/10" : "bg-argus-accent/10"}`}>
+          {isAdmin
+            ? <SlidersHorizontal className="w-5 h-5 text-purple-400" />
+            : <SettingsIcon className="w-5 h-5 text-argus-accent" />
+          }
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-argus-100">Settings</h2>
-          <p className="text-xs text-argus-500">Configure thresholds and manage cameras</p>
+          <h2 className="text-lg font-semibold text-argus-100">{isAdmin ? "Threshold Configuration" : "Settings"}</h2>
+          <p className="text-xs text-argus-500">{isAdmin ? "Live per-cell warning and critical thresholds" : "Configure thresholds and manage cameras"}</p>
         </div>
       </div>
 
@@ -117,16 +124,18 @@ export default function Settings() {
           <div className="glass-panel rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-argus-200">Cameras</h3>
-              <button
-                onClick={() => {
-                  setShowNewCameraForm(!showNewCameraForm);
-                  setRegisterError("");
-                }}
-                className="p-2 rounded-lg bg-argus-accent/10 text-argus-accent hover:bg-argus-accent/20 transition-colors cursor-pointer"
-                title="Add camera"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              {!isAdmin && (
+                <button
+                  onClick={() => {
+                    setShowNewCameraForm(!showNewCameraForm);
+                    setRegisterError("");
+                  }}
+                  className="p-2 rounded-lg bg-argus-accent/10 text-argus-accent hover:bg-argus-accent/20 transition-colors cursor-pointer"
+                  title="Add camera"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {cameras.length === 0 ? (
@@ -169,8 +178,8 @@ export default function Settings() {
             )}
           </div>
 
-          {/* Register New Camera Form */}
-          {showNewCameraForm && (
+          {/* Register New Camera Form — operators only */}
+          {showNewCameraForm && !isAdmin && (
             <div className="glass-panel rounded-2xl p-5 animate-fade-in">
               <h3 className="text-sm font-semibold text-argus-200 mb-4">Add Camera</h3>
 
