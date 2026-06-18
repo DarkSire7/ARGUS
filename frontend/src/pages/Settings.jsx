@@ -23,7 +23,7 @@ export default function Settings() {
   const [thresholds, setThresholds] = useState([]);
   const [saved, setSaved] = useState(false);
 
-  const [newCamera, setNewCamera] = useState({ name: "", rtspUrl: "", venue: "" });
+  const [newCamera, setNewCamera] = useState({ name: "", rtspUrl: "", venue: "", sourceType: "rtsp" });
   const [showNewCameraForm, setShowNewCameraForm] = useState(false);
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [registerError, setRegisterError] = useState("");
@@ -87,7 +87,7 @@ export default function Settings() {
     try {
       await RestAPI.registerCamera(newCamera);
       setRegisterSuccess(true);
-      setNewCamera({ name: "", rtspUrl: "", venue: "" });
+      setNewCamera({ name: "", rtspUrl: "", venue: "", sourceType: "rtsp" });
       await loadCameras();
       setTimeout(() => {
         setRegisterSuccess(false);
@@ -189,14 +189,39 @@ export default function Settings() {
                 </div>
 
                 <div>
+                  <label className="block text-[11px] text-argus-500 mb-1.5 font-medium uppercase tracking-wider">
+                    Source Type
+                  </label>
+                  <div className="flex rounded-xl overflow-hidden border border-argus-700/50">
+                    {["rtsp", "video"].map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setNewCamera((c) => ({ ...c, sourceType: t, rtspUrl: "" }))}
+                        className={`flex-1 py-2 text-xs font-medium transition-colors cursor-pointer ${
+                          newCamera.sourceType === t
+                            ? "bg-argus-accent/20 text-argus-accent"
+                            : "bg-argus-800 text-argus-500 hover:text-argus-300"
+                        }`}
+                      >
+                        {t === "rtsp" ? "RTSP Stream" : "Video File"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
                   <label className="block text-[11px] text-argus-500 mb-1 font-medium uppercase tracking-wider">
-                    RTSP URL
+                    {newCamera.sourceType === "rtsp" ? "RTSP URL" : "Video File Path"}
                   </label>
                   <input
                     type="text"
                     value={newCamera.rtspUrl}
                     onChange={(e) => setNewCamera((c) => ({ ...c, rtspUrl: e.target.value }))}
-                    placeholder="rtsp://192.168.1.x:554/stream"
+                    placeholder={
+                      newCamera.sourceType === "rtsp"
+                        ? "rtsp://192.168.1.x:554/stream"
+                        : "videos/demo.mp4"
+                    }
                     className="w-full px-3 py-2 rounded-xl bg-argus-800 border border-argus-700/50 text-argus-200 text-sm font-mono placeholder:text-argus-600 focus:outline-none focus:border-argus-accent/50 transition-colors"
                   />
                 </div>

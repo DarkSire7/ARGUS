@@ -86,7 +86,7 @@ export default function SystemHealth() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <HealthCard
           icon={health.backendStatus === "connected" ? Wifi : WifiOff}
           label="Backend Status"
@@ -110,6 +110,18 @@ export default function SystemHealth() {
           label="Uptime"
           value={health.uptime}
           color="accent"
+        />
+        <HealthCard
+          icon={health.dbConnected ? Wifi : WifiOff}
+          label="DB Status"
+          value={health.dbConnected ? "PostgreSQL" : "In-Memory"}
+          color={health.dbConnected ? "green" : "amber"}
+        />
+        <HealthCard
+          icon={health.cacheConnected ? Wifi : WifiOff}
+          label="Cache Status"
+          value={health.cacheConnected ? "Redis" : "No Cache"}
+          color={health.cacheConnected ? "green" : "amber"}
         />
       </div>
 
