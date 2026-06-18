@@ -1,17 +1,34 @@
+import { useState } from "react";
 import { TrendingUp, Camera as CameraIcon, AlertTriangle } from "lucide-react";
 import CameraCard from "../components/CameraCard";
 import AlertPanel from "../components/AlertPanel";
 import OccupancyChart from "../components/OccupancyChart";
+import CameraFeedModal from "../components/CameraFeedModal";
 
 export default function Dashboard({ snapshots, alerts, history, onAcknowledge, onDismiss }) {
+  const [selectedSnapshot, setSelectedSnapshot] = useState(null);
+
   const totalCameras = snapshots.length;
   const onlineCameras = snapshots.filter((s) => s.status === "online").length;
   const totalOccupancy = snapshots.reduce((sum, s) => sum + (s.totalOccupancy || 0), 0);
   const activeAlerts = alerts.filter((a) => !a.acknowledged).length;
   const onlineSnapshots = snapshots.filter((s) => s.status === "online");
 
+  // Keep modal snapshot fresh: if modal is open, merge latest data for that camera
+  const modalSnapshot = selectedSnapshot
+    ? (snapshots.find((s) => s.cameraId === selectedSnapshot.cameraId) ?? selectedSnapshot)
+    : null;
+
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Live feed modal */}
+      {modalSnapshot && (
+        <CameraFeedModal
+          snapshot={modalSnapshot}
+          onClose={() => setSelectedSnapshot(null)}
+        />
+      )}
+
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={CameraIcon} label="Cameras Online" value={`${onlineCameras}/${totalCameras}`} color="accent" />
@@ -30,7 +47,11 @@ export default function Dashboard({ snapshots, alerts, history, onAcknowledge, o
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {snapshots.map((snapshot) => (
-                <CameraCard key={snapshot.cameraId} snapshot={snapshot} />
+                <CameraCard
+                  key={snapshot.cameraId}
+                  snapshot={snapshot}
+                  onClick={snapshot.status === "online" ? () => setSelectedSnapshot(snapshot) : undefined}
+                />
               ))}
             </div>
           )}

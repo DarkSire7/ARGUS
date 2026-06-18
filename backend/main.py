@@ -6,8 +6,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response, StreamingResponse
 
 import db
 import cache
@@ -133,6 +134,47 @@ async def root():
         "ws_clients": manager.count,
         "docs": "/docs",
     }
+
+
+# ─── Video frame endpoints ─────────────────────────────────────────────────────
+
+@app.get("/video/{camera_id}/frame")
+async def video_frame(camera_id: str):
+    """Single annotated JPEG snapshot — poll this for a live feed."""
+    pipeline = app.state.pipeline
+    if not pipeline or pipeline.camera_id != camera_id:
+        raise HTTPException(status_code=404, detail="No pipeline for this camera")
+    frame = pipeline.get_latest_frame()
+    if not frame:
+        raise HTTPException(status_code=503, detail="Frame not yet available")
+    return Response(
+        content=frame,
+        media_type="image/jpeg",
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
+
+
+@app.get("/video/{camera_id}/stream")
+async def video_stream(camera_id: str):
+    """MJPEG multipart stream (fallback — prefer /frame for polling)."""
+    pipeline = app.state.pipeline
+    if not pipeline or pipeline.camera_id != camera_id:
+        raise HTTPException(status_code=404, detail="No pipeline for this camera")
+
+    async def generate():
+        while not pipeline._stop_event.is_set():
+            frame = pipeline.get_latest_frame()
+            if frame:
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n"
+                )
+            await asyncio.sleep(0.04)
+
+    return StreamingResponse(
+        generate(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )
 
 
 # ─── WebSocket endpoint ────────────────────────────────────────────────────────

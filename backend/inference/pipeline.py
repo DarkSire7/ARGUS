@@ -16,6 +16,8 @@ import threading
 import time
 from datetime import datetime, timezone
 
+import cv2
+
 from inference.frame_reader import FrameReader
 from inference.yolo_engine import YOLOEngine
 from inference.zone_mapper import ZoneMapper
@@ -47,6 +49,8 @@ class Pipeline:
         self._alert_counter = 0
         self._active_breaches: set[int] = set()
         self._current_fps: float = 0.0
+        self._latest_frame: bytes | None = None
+        self._frame_lock = threading.Lock()
 
     # ─── Public API ───────────────────────────────────────────
 
@@ -63,6 +67,11 @@ class Pipeline:
         self._stop_event.set()
         if self._thread:
             self._thread.join(timeout=10)
+
+    def get_latest_frame(self) -> bytes | None:
+        """Return the most recent annotated JPEG frame bytes, or None if not ready."""
+        with self._frame_lock:
+            return self._latest_frame
 
     async def broadcast_loop(self, manager, interval: float = 2.0) -> None:
         """
@@ -124,6 +133,8 @@ class Pipeline:
             detections = engine.detect(frame)
             counts = mapper.count_cells(detections)
 
+            self._annotate_frame(frame, detections, counts, reader.width, reader.height)
+
             frame_count += 1
             elapsed = time.time() - fps_timer
             if elapsed >= 1.0:
@@ -151,6 +162,39 @@ class Pipeline:
 
         reader.release()
         print("[Pipeline] Stopped.")
+
+    def _annotate_frame(self, frame, detections: list[dict], counts: list[int], w: int, h: int) -> None:
+        """Draw bounding boxes, 3×3 grid lines, and per-cell counts; encode to JPEG."""
+        annotated = frame.copy()
+        cw, ch = w / 3, h / 3
+
+        # Person bounding boxes
+        for det in detections:
+            x1, y1, x2, y2 = int(det["x1"]), int(det["y1"]), int(det["x2"]), int(det["y2"])
+            cv2.rectangle(annotated, (x1, y1), (x2, y2), (0, 255, 128), 2)
+            cv2.circle(annotated, (int(det["cx"]), int(det["cy"])), 4, (0, 255, 128), -1)
+
+        # 3×3 grid lines
+        for i in range(1, 3):
+            cv2.line(annotated, (int(i * cw), 0), (int(i * cw), h), (80, 160, 80), 1)
+            cv2.line(annotated, (0, int(i * ch)), (w, int(i * ch)), (80, 160, 80), 1)
+
+        # Per-cell occupancy count
+        for idx, count in enumerate(counts):
+            row, col = divmod(idx, 3)
+            tx = int(col * cw + 6)
+            ty = int(row * ch + 22)
+            cv2.putText(annotated, str(count), (tx, ty),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 220, 100), 2, cv2.LINE_AA)
+
+        # FPS watermark
+        cv2.putText(annotated, f"{self._current_fps:.1f} FPS", (8, h - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (120, 120, 120), 1, cv2.LINE_AA)
+
+        ok, buf = cv2.imencode(".jpg", annotated, [cv2.IMWRITE_JPEG_QUALITY, 75])
+        if ok:
+            with self._frame_lock:
+                self._latest_frame = buf.tobytes()
 
     def _drain_latest(self) -> dict | None:
         """Return the most recent queued result, discarding stale ones."""

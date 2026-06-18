@@ -8,7 +8,7 @@ import HeatmapGrid from "./HeatmapGrid";
  *
  * @param {{ snapshot: Object }} props
  */
-export default function CameraCard({ snapshot }) {
+export default function CameraCard({ snapshot, onClick }) {
   const {
     cameraId,
     cameraName,
@@ -37,9 +37,11 @@ export default function CameraCard({ snapshot }) {
   return (
     <div
       id={`camera-card-${cameraId}`}
+      onClick={onClick}
       className={`
         glass-panel glass-panel-hover rounded-2xl p-5
         transition-all duration-300 ease-out
+        ${onClick ? "cursor-pointer" : ""}
         ${hasCritical ? "animate-pulse-red border-severity-red/30" : ""}
         ${status === "offline" ? "opacity-50" : ""}
       `}
@@ -74,6 +76,9 @@ export default function CameraCard({ snapshot }) {
               {cameraName}
             </h3>
             <p className="text-[11px] text-argus-500 font-mono">{venue}</p>
+            {onClick && status !== "offline" && (
+              <p className="text-[10px] text-argus-600 mt-0.5">Click to view live feed</p>
+            )}
           </div>
         </div>
 
