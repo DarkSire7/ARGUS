@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import {
   Activity,
-  MonitorCheck,
   Wifi,
   WifiOff,
   Camera,
@@ -10,12 +9,9 @@ import {
   Users,
   RefreshCw,
 } from "lucide-react";
-import { useOutletContext } from "react-router-dom";
 import { RestAPI } from "../services/api";
 
 export default function SystemHealth() {
-  const { role } = useOutletContext() || {};
-  const isAdmin = role === "admin";
   const [health, setHealth] = useState(null);
   const [latency, setLatency] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,19 +55,12 @@ export default function SystemHealth() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAdmin ? "bg-purple-500/10" : "bg-argus-accent/10"}`}>
-            {isAdmin
-              ? <MonitorCheck className="w-5 h-5 text-purple-400" />
-              : <Activity className="w-5 h-5 text-argus-accent" />
-            }
+          <div className="w-10 h-10 rounded-xl bg-argus-accent/10 flex items-center justify-center">
+            <Activity className="w-5 h-5 text-argus-accent" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-argus-100">
-              {isAdmin ? "Camera Status" : "System Health"}
-            </h2>
-            <p className="text-xs text-argus-500">
-              {isAdmin ? "Live inference FPS and camera health" : "Backend and camera status monitoring"}
-            </p>
+            <h2 className="text-lg font-semibold text-argus-100">System Health</h2>
+            <p className="text-xs text-argus-500">Backend and camera status monitoring</p>
           </div>
         </div>
 
@@ -92,8 +81,8 @@ export default function SystemHealth() {
         </div>
       </div>
 
-      {/* Overview Cards — operator view only */}
-      {!isAdmin && <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <HealthCard
           icon={health.backendStatus === "connected" ? Wifi : WifiOff}
           label="Backend Status"
@@ -130,15 +119,13 @@ export default function SystemHealth() {
           value={health.cacheConnected ? "Redis" : "No Cache"}
           color={health.cacheConnected ? "green" : "amber"}
         />
-      </div>}
+      </div>
 
       {/* Camera Status Table */}
       <div className="glass-panel rounded-2xl overflow-hidden">
         <div className="flex items-center gap-2 px-5 py-4 border-b border-argus-700/50">
-          <Camera className={`w-4 h-4 ${isAdmin ? "text-purple-400" : "text-argus-400"}`} />
-          <h3 className="text-sm font-semibold text-argus-200">
-            {isAdmin ? "Camera Status" : "Camera Health"}
-          </h3>
+          <Camera className="w-4 h-4 text-argus-400" />
+          <h3 className="text-sm font-semibold text-argus-200">Camera Health</h3>
         </div>
 
         <div className="overflow-x-auto">

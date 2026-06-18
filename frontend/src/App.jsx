@@ -92,7 +92,7 @@ export default function App() {
 
   const handleRoleChange = useCallback((newRole) => {
     setRole(newRole);
-    navigate(newRole === "admin" ? "/settings" : "/");
+    navigate("/");
   }, [navigate]);
 
   const activeAlertCount = alerts.filter((a) => !a.acknowledged).length;

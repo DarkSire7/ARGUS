@@ -18,11 +18,13 @@ import {
 const OPERATOR_NAV = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/incidents", icon: FileText, label: "Incident Log" },
+  { to: "/settings", icon: SlidersHorizontal, label: "Settings" },
+  { to: "/health", icon: MonitorCheck, label: "System Health" },
 ];
 
 const ADMIN_NAV = [
-  { to: "/settings", icon: SlidersHorizontal, label: "Thresholds" },
-  { to: "/health", icon: MonitorCheck, label: "Camera Status" },
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/incidents", icon: FileText, label: "Incident Log" },
 ];
 
 export default function Layout({ connected, alertCount, role, onRoleChange }) {
